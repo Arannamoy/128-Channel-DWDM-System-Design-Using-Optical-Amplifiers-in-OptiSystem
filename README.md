@@ -1,54 +1,47 @@
-# 128-Channel DWDM Optical Communication System with Dispersion Compensation
+# 128-Channel DWDM System: Industry-Calibrated Dispersion Compensation
 
 ## 📌 Project Overview
-This project simulates a high-capacity **128-Channel Dense Wavelength Division Multiplexing (DWDM)** optical communication network. The architecture is designed to transmit data over a 100 km standard single-mode optical fiber link, addressing critical linear and non-linear impairments such as attenuation, chromatic dispersion, and phase modulation.
+This repository contains the design, simulation, and performance analysis of a high-capacity **128-Channel Dense Wavelength Division Multiplexing (DWDM)** optical network operating at **10 Gbps per channel**. The system was simulated using **OptiSystem**, focusing on mitigating Chromatic Dispersion (CD) and non-linearities (SPM, XPM, FWM) over a long-haul transmission link.
 
-## 🛠️ Tools & Environment
-* **Software:** OptiSystem [Version 23.0]
-* **Global Parameters:** Sequence length = 1024, Samples per bit = 32 (optimized for deep non-linear physical analysis).
+The core achievement of this project is the successful implementation of a highly realistic **Dual-Stage Amplification with Mid-Stage DCF (Sandwich Model)** architecture, meticulously calibrated with real-world industry parameters.
 
-## ⚙️ System Architecture
-The system consists of a 128-channel WDM transmitter, a 100 km optical fiber link (divided into two 50 km spans) with an EDFA for loss compensation, a precise Dispersion Compensating Fiber (DCF), and a WDM Demultiplexer. 
+## 🏗️ Architectural Design (The Sandwich Model)
+To balance signal attenuation and fiber non-linearities, the transmission link follows this exact sequential path:
+**`Tx ➔ SMF (100 km) ➔ Pre-Amp EDFA ➔ DCF (20 km) ➔ Booster EDFA ➔ Demux ➔ Rx`**
 
-![System Architecture](/Images/001%20Architectural%20Design.png)
+### 💡 Dispersion Balancing Strategy:
+Perfect chromatic dispersion matching was achieved to ensure zero residual dispersion at the receiver:
+*   **SMF Accumulation:** 100 km × 16.75 ps/nm/km = **+1675 ps/nm**
+*   **DCF Compensation:** 20 km × -83.75 ps/nm/km = **-1675 ps/nm**
+*   **Residual Dispersion:** **0 ps/nm**
 
-### Architecture Parameters:
-* **Transmitter:** 128 Channels, 100 GHz spacing, 193.1 THz start frequency, -0.8 dBm power/channel, 10 Gbps NRZ.
-* **Transmission Link:** 100 km SMF (Loss: 0.2 dB/km, Dispersion: 16.75 ps/nm/km).
-* **Amplification:** EDFA with 20 dB Gain and 4 dB Noise Figure.
-* **Dispersion Compensation Unit:** 20 km DCF (Dispersion: -83.75 ps/nm/km) to perfectly negate the +1675 ps/nm accumulated SMF dispersion.
+## ⚙️ Industry-Calibrated Parameters
+Unlike ideal theoretical models, this system is tuned to reflect real-world physical limitations:
 
-## 📊 Optical Spectrum Analysis
-The spectrum analyzer clearly shows the multiplexed 128 channels covering a massive bandwidth without significant clipping or distortion after transmission.
-
-![Optical Spectrum Analyzer](/Images/003%20Optical%20Spectrum%20Analyzer.png)
-
-## 📈 Simulation Results & Eye Diagrams
-The system was evaluated using BER Analyzers across multiple spectrum indices. The Cut-off frequency for receivers was optimized to `0.6 * Bit rate` and `0.75 * Bit rate` depending on the channel's noise profile.
-
-| Channel Index | Max. Q-Factor | Min. BER | Observation |
+| Component | Parameter | Calibrated Value | Justification |
 | :--- | :--- | :--- | :--- |
-| **Channel 0** | 11.51 | $5.26 \times 10^{-31}$ | Excellent transmission |
-| **Channel 32** | 9.65 | $2.26 \times 10^{-22}$ | Clear eye opening |
-| **Channel 64** | 11.47 | $8.47 \times 10^{-31}$ | Highly stable mid-band |
-| **Channel 96** | 7.40 | $6.39 \times 10^{-14}$ | Good signal strength |
-| **Channel 128** | 5.32 | $4.99 \times 10^{-08}$ | Within safe FEC limit (Q > 3.8) |
+| **WDM Mux/Demux** | Bandwidth | **75 GHz** | Reduced from 100 GHz to create a 25 GHz Guard Band, effectively filtering out inter-channel crosstalk and out-of-band ASE noise. |
+| **DCF (Dispersion Fiber)**| Attenuation | **0.6 dB/km** | Reflects the high insertion loss typical of heavily doped, narrow-core DCF in real-world scenarios. |
+| **DCF (Dispersion Fiber)**| Effective Area | **22 μm²** | Accurately models the narrow core of DCF, triggering realistic non-linear penalties (SPM). |
+| **Pre-Amp (EDFA 1)** | Gain | **10 dB** | Kept moderately low to prevent launching high-power signals into the narrow-core DCF, thus minimizing SPM. |
 
-*Note: The gradual decrease in Q-factor towards higher channels (Gain Tilt) is a realistic demonstration of inter-channel power transfer (Stimulated Raman Scattering) in massive DWDM systems.*
+## 📊 Performance & Results
+The introduction of real-world constraints (high DCF attenuation, narrow effective area, and tight filtering) successfully normalized the system's performance, bringing the theoretical metrics down to highly realistic, industry-standard levels.
 
-### 👁️ Eye Diagrams (Channels 0 & 32)
-![BER Analyzer Channels 0 and 32](/Images/004%20BER%20Analyzer%200%20and%2032.png)
+| Channel Number | Max. Q-Factor | Minimum BER |
+| :---: | :---: | :---: |
+| **Channel 0** | 12.93 | 1.36 × 10<sup>-38</sup> |
+| **Channel 32** | 12.65 | 5.18 × 10<sup>-37</sup> |
+| **Channel 64** | 11.58 | 2.18 × 10<sup>-31</sup> |
+| **Channel 96** | 13.50 | 7.15 × 10<sup>-42</sup> |
+| **Channel 98** | 13.42 | 2.02 × 10<sup>-41</sup> |
+| **Channel 128** | 11.45 | 1.09 × 10<sup>-30</sup> |
 
-### 👁️ Eye Diagrams (Channels 64 & 96)
-![BER Analyzer Channels 64 and 96](/Images/004%20BER%20Analyzer%2064%20and%2096.png)
+*Note: While the BER values are simulated using the Gaussian Approximation in an ideal noise environment, the Q-Factor range of 11.4 to 13.5 strongly validates the system's robustness, placing it well above the industry minimum threshold (Q > 6) and representing an excellent, deployable design.*
 
-### 👁️ Eye Diagrams (Channels 98 & 128)
-![BER Analyzer Channels 98 and 128](/Images/004%20BER%20Analyzer%2098%20and%20128.png)
+## 🔬 Key Findings
+1.  **Noise Suppression via Tight Filtering:** Truncating the filter bandwidth to 75 GHz isolated the main signal lobe and rejected ASE noise, proving that 100 GHz full-window filters are suboptimal for 10 Gbps NRZ modulation.
+2.  **Managing the Non-linear Penalty:** The Dual-Stage EDFA deployment successfully circumvented the severe attenuation (12 dB) and high non-linearity of the 22 μm² DCF without saturating the optical receivers.
 
-## ⏱️ Computation Performance
-Due to the massive 128-channel bandwidth and deep non-linear physical calculations (Sequence length: 1024), the simulation required significant computational power.
-
-![Total Running Time](/Images/002%20Total%20Running%20Time.png)
-
-## 💡 Conclusion
-The architecture successfully establishes a stable 128-channel optical network. By mathematically aligning the DCF dispersion (-83.75 ps/nm/km over 20km) with the SMF dispersion (16.75 ps/nm/km over 100km), the chromatic dispersion was neutralized perfectly, ensuring reliable long-haul data transmission.
+## 🛠️ Tools Used
+*   **OptiSystem** (Network Architecture & Simulation)
